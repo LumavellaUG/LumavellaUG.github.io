@@ -1,96 +1,79 @@
 /* =========================================
-   SAUBEREI — WEBSITE INTERACTIONS
-   German Only • No Translation • No RTL
+   SAUBEREI - WEBSITE JAVASCRIPT
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-  "use strict";
 
-  /* ========================================
-     1. FORCE GERMAN / LEFT-TO-RIGHT
-  ======================================== */
+  /* ---------------------------------------
+     MOBILE NAVIGATION
+  --------------------------------------- */
 
-  document.documentElement.lang = "de";
-  document.documentElement.dir = "ltr";
+  const menuToggle = document.getElementById("menuToggle");
+  const mainNavigation = document.getElementById("mainNavigation");
+  const navLinks = document.querySelectorAll(".nav-link, .nav-cta");
 
-  document.body.classList.remove(
-    "is-persian",
-    "rtl",
-    "persian"
-  );
+  function openMenu() {
+    if (!menuToggle || !mainNavigation) return;
 
-  // Remove any old language switcher from the page
-  document.querySelectorAll(".language-toggle").forEach((button) => {
-    button.remove();
-  });
+    mainNavigation.classList.add("open");
+    menuToggle.classList.add("active");
+    document.body.classList.add("menu-open");
 
-
-  /* ========================================
-     2. MOBILE NAVIGATION
-  ======================================== */
-
-  const menuToggle = document.querySelector(".menu-toggle");
-  const mainNav = document.querySelector(".main-nav");
-
-  function closeMenu() {
-    if (!menuToggle || !mainNav) return;
-
-    menuToggle.classList.remove("active");
-    mainNav.classList.remove("open");
-
-    menuToggle.setAttribute("aria-expanded", "false");
-    document.body.classList.remove("menu-open");
+    menuToggle.setAttribute("aria-expanded", "true");
+    menuToggle.setAttribute("aria-label", "Menü schließen");
   }
 
-  if (menuToggle && mainNav) {
+  function closeMenu() {
+    if (!menuToggle || !mainNavigation) return;
+
+    mainNavigation.classList.remove("open");
+    menuToggle.classList.remove("active");
+    document.body.classList.remove("menu-open");
+
     menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "Menü öffnen");
+  }
 
+  if (menuToggle && mainNavigation) {
     menuToggle.addEventListener("click", () => {
-      const isOpen = mainNav.classList.toggle("open");
+      const isOpen = mainNavigation.classList.contains("open");
 
-      menuToggle.classList.toggle("active", isOpen);
-      menuToggle.setAttribute("aria-expanded", String(isOpen));
-
-      document.body.classList.toggle("menu-open", isOpen);
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
     });
 
-    // Close menu when clicking a navigation link
-    mainNav.querySelectorAll("a").forEach((link) => {
+    navLinks.forEach((link) => {
       link.addEventListener("click", closeMenu);
     });
 
-    // Close menu with Escape
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         closeMenu();
       }
     });
 
-    // Close menu when returning to desktop size
     window.addEventListener("resize", () => {
-      if (window.innerWidth > 900) {
+      if (window.innerWidth > 850) {
         closeMenu();
       }
     });
   }
 
 
-  /* ========================================
-     3. SCROLL REVEAL ANIMATIONS
-  ======================================== */
+  /* ---------------------------------------
+     REVEAL ANIMATIONS
+  --------------------------------------- */
 
-  const revealElements = document.querySelectorAll(
-    ".reveal, .reveal-left, .reveal-right"
-  );
+  const revealElements = document.querySelectorAll(".reveal");
 
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
-  if (
-    prefersReducedMotion ||
-    !("IntersectionObserver" in window)
-  ) {
+  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
     revealElements.forEach((element) => {
       element.classList.add("visible");
     });
@@ -106,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       {
         threshold: 0.12,
-        rootMargin: "0px 0px -40px 0px"
+        rootMargin: "0px 0px -35px 0px"
       }
     );
 
@@ -116,86 +99,87 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  /* ========================================
-     4. CONTACT FORM
-  ======================================== */
+  /* ---------------------------------------
+     CURRENT YEAR
+  --------------------------------------- */
 
-  const quoteForm = document.querySelector("#quoteForm");
+  const yearElement = document.getElementById("currentYear");
 
-  if (quoteForm) {
-    quoteForm.addEventListener("submit", (event) => {
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
+
+
+  /* ---------------------------------------
+     CONTACT FORM
+     GitHub Pages has no server-side form handler.
+     This creates an email draft in the visitor's
+     default email application.
+  --------------------------------------- */
+
+  const contactForm = document.getElementById("contactForm");
+  const formMessage = document.getElementById("formMessage");
+
+  const companyEmail = "info@sauberei-berlin.de";
+
+  if (contactForm) {
+    contactForm.addEventListener("submit", (event) => {
       event.preventDefault();
 
-      const formData = new FormData(quoteForm);
+      if (!contactForm.reportValidity()) {
+        return;
+      }
 
-      const name = String(
-        formData.get("name") || ""
-      ).trim();
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const service = document.getElementById("service").value;
+      const message = document.getElementById("message").value.trim();
+      const privacyConsent = document.getElementById("privacyConsent");
 
-      const email = String(
-        formData.get("email") || ""
-      ).trim();
-
-      const phone = String(
-        formData.get("phone") || ""
-      ).trim();
-
-      const service = String(
-        formData.get("service") || ""
-      ).trim();
-
-      const message = String(
-        formData.get("message") || ""
-      ).trim();
-
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      // Validate required fields
-      if (
-        !name ||
-        !emailPattern.test(email) ||
-        !service ||
-        !message
-      ) {
+      if (!privacyConsent.checked) {
         showFormMessage(
-          "Bitte überprüfen Sie Ihre Eingaben. Füllen Sie alle Pflichtfelder korrekt aus.",
+          "Bitte bestätigen Sie, dass Sie die Datenschutzhinweise zur Kenntnis genommen haben.",
           "error"
         );
-
+        privacyConsent.focus();
         return;
       }
 
-      // Business email must be configured in the HTML:
-      // <form id="quoteForm" data-email="info@example.de">
-      const businessEmail = quoteForm.dataset.email;
-
-      if (!businessEmail) {
+      if (!name || !email || !service || !message) {
         showFormMessage(
-          "Das Formular wurde geprüft. Für den tatsächlichen Versand muss noch die geschäftliche E-Mail-Adresse eingerichtet werden.",
-          "success"
+          "Bitte füllen Sie alle Pflichtfelder aus.",
+          "error"
         );
-
         return;
       }
 
-      const subject = encodeURIComponent(
-        `Reinigungsanfrage von ${name}`
-      );
+      const subject = "Reinigungsanfrage über die Website";
 
-      const body = encodeURIComponent(
-        `Name: ${name}\n` +
-        `E-Mail: ${email}\n` +
-        `Telefon: ${phone}\n` +
-        `Gewünschte Leistung: ${service}\n\n` +
-        `Nachricht:\n${message}`
-      );
+      const body = [
+        "Guten Tag Sauberei-Team,",
+        "",
+        "ich möchte eine unverbindliche Anfrage stellen.",
+        "",
+        "Name: " + name,
+        "E-Mail: " + email,
+        "Telefon: " + (phone || "Nicht angegeben"),
+        "Gewünschte Leistung: " + service,
+        "",
+        "Nachricht:",
+        message,
+        "",
+        "Mit freundlichen Grüßen",
+        name
+      ].join("\n");
 
       const mailtoLink =
-        `mailto:${businessEmail}` +
-        `?subject=${subject}&body=${body}`;
+        "mailto:" + companyEmail +
+        "?subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body);
 
       showFormMessage(
-        "Ihre Anfrage wurde vorbereitet. Ihre E-Mail-App wird geöffnet.",
+        "Ihr E-Mail-Programm wird geöffnet. Bitte prüfen Sie Ihre Nachricht und senden Sie die E-Mail dort ab.",
         "success"
       );
 
@@ -204,45 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showFormMessage(message, type) {
-    if (!quoteForm) return;
+    if (!formMessage) return;
 
-    let messageElement = quoteForm.querySelector(
-      ".form-message"
-    );
-
-    if (!messageElement) {
-      messageElement = document.createElement("p");
-      messageElement.className = "form-message";
-      quoteForm.appendChild(messageElement);
-    }
-
-    messageElement.textContent = message;
-
-    messageElement.classList.remove(
-      "success",
-      "error"
-    );
-
-    messageElement.classList.add(type);
-    messageElement.setAttribute("role", "status");
-    messageElement.setAttribute("aria-live", "polite");
+    formMessage.textContent = message;
+    formMessage.classList.remove("error", "success");
+    formMessage.classList.add(type);
   }
 
 
-  /* ========================================
-     5. AUTOMATIC FOOTER YEAR
-  ======================================== */
-
-  document.querySelectorAll("[data-current-year]").forEach(
-    (element) => {
-      element.textContent = new Date().getFullYear();
-    }
-  );
-
-
-  /* ========================================
-     6. SMOOTH SCROLL
-  ======================================== */
+  /* ---------------------------------------
+     SMOOTH SCROLL FOR INTERNAL LINKS
+  --------------------------------------- */
 
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener("click", (event) => {
@@ -252,30 +208,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const target = document.querySelector(targetId);
 
-      if (!target) return;
+      if (target) {
+        event.preventDefault();
 
-      event.preventDefault();
-
-      target.scrollIntoView({
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-        block: "start"
-      });
+        target.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start"
+        });
+      }
     });
   });
 
 
-  /* ========================================
-     7. CLOSE MENU WHEN CLICKING OUTSIDE
-  ======================================== */
+  /* ---------------------------------------
+     CLOSE MOBILE MENU AFTER OUTSIDE CLICK
+  --------------------------------------- */
 
   document.addEventListener("click", (event) => {
-    if (!menuToggle || !mainNav) return;
+    if (!mainNavigation || !menuToggle) return;
 
-    const clickedInsideMenu =
-      mainNav.contains(event.target) ||
-      menuToggle.contains(event.target);
+    const clickedInsideMenu = mainNavigation.contains(event.target);
+    const clickedToggle = menuToggle.contains(event.target);
 
-    if (!clickedInsideMenu) {
+    if (
+      mainNavigation.classList.contains("open") &&
+      !clickedInsideMenu &&
+      !clickedToggle
+    ) {
       closeMenu();
     }
   });
